@@ -70,6 +70,29 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
     int data_int = 30;
     boolean mThreadRun, mStart;
     SegmentThread mSegThread;
+    int mCurCount, mMaxCount;
+
+    private class TimerThread extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            while(mThreadRun) {
+                byte[] n = {0, 0, 0, 0, 0, 0, 0};
+                try {
+                    if (mStart == false) {
+                        continue;
+                    }
+                    if (--mCurCount <= 0) {
+                        mStart = false;
+                        mCurCount = 0;
+                    }
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     private class SegmentThread extends Thread {
         @Override
@@ -78,18 +101,17 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
             while(mThreadRun) {
                 byte[] n = {0, 0, 0, 0, 0, 0, 0};
 
-                if(mStart==false) {writeSegmentDriver(n, n.length);}
-                else {
-                    for(int i=0; i<100; i++) {
-                        n[0] = (byte) (data_int % 1000000 / 100000);
-                        n[1] = (byte) (data_int % 100000 / 10000);
-                        n[2] = (byte) (data_int % 10000 / 1000);
-                        n[3] = (byte) (data_int % 1000 / 100);
-                        n[4] = (byte) (data_int % 100 / 10);
-                        n[5] = (byte) (data_int % 10 );
-                        writeSegmentDriver(n, n.length);
+                    if (mStart == false) {
+                        writeSegmentDriver(n,7);
+                    } else {
+                        n[0] = (byte) (mCurCount % 1000000/100000);
+                        n[1] = (byte) (mCurCount % 100000 / 10000);
+                        n[2] = (byte) (mCurCount % 10000 / 1000);
+                        n[3] = (byte) (mCurCount % 1000 / 100);
+                        n[4] = (byte) (mCurCount % 100 / 10);
+                        n[5] = (byte) (mCurCount % 10);
+                        writeSegmentDriver(n,7);
                     }
-                }
             }
         }
     }
@@ -362,6 +384,7 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         text_right.setText("" + right_circles);
 
         data_int = abs(left_circles-right_circles);
+        mCurCount = data_int;
         Log.d(TAG,"data_int: " + data_int);
 
         double percentage = ((double)right_circles/((double)left_circles + (double)right_circles)) * 8;
