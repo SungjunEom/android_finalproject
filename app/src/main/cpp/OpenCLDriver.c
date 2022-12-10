@@ -11,7 +11,10 @@
 #define LOG_TAG "DEBUG"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
+#define RGB8888_A(p) ((p & (0xff<<24))      >> 24 )
+#define RGB8888_B(p) ((p & (0xff << 16)) >> 16 )
+#define RGB8888_G(p) ((p & (0xff << 8))  >> 8 )
+#define RGB8888_R(p) (p & (0xff) )
 #define CHECK_CL(expression) {                        \
 	cl_int err = (expression);                       \
 	if (err < 0 && err > -64) {                      \
@@ -93,7 +96,7 @@ Java_com_example_finalproject_MainActivity_makeGrayscale
     unsigned char *blured_img;
 
     //unsigned char* cl_file_name = (unsigned char *) "Grayscale.cl";
-    unsigned char* kernel_name = (unsigned char *) "kernel_grayscale";
+    unsigned char* kernel_name = (unsigned char *) "kernel_gray";
 
     // Device input buffers
     cl_mem d_src;

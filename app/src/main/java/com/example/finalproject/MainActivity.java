@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
             tempFile.createNewFile();
             FileOutputStream out = new FileOutputStream(tempFile);
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.close(); 
+            out.close();
             Toast.makeText(getApplicationContext(), "파일 저장 성공", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), "파일 저장 실패", Toast.LENGTH_SHORT).show();
@@ -325,9 +325,13 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         Mat gray = new Mat();
         Bitmap grayBmp = makeGrayscale(bmp32);
         Log.d(TAG,"Making grayscale done");
-        capturedImageHolder.setImageBitmap(grayBmp); //makeGrayscale결과 확인용
-        saveBitmap(bmp32,"original_grayscale.bmp"); //makeGrayscale결과 확인용
-        saveBitmap(grayBmp,"converted_grayscale.bmp"); //makeGrayscale결과 확인용
+        Toast.makeText(MainActivity.this, "GPU",
+                Toast.LENGTH_SHORT).show();
+
+        // 아래는 디버깅용
+//        capturedImageHolder.setImageBitmap(grayBmp); //makeGrayscale결과 확인용
+//        saveBitmap(bmp32,"original_grayscale.bmp"); //makeGrayscale결과 확인용
+//        saveBitmap(grayBmp,"converted_grayscale.bmp"); //makeGrayscale결과 확인용
         Bitmap emptyBitmap = Bitmap.createBitmap(grayBmp.getWidth(),
                 grayBmp.getHeight(), grayBmp.getConfig());
         if (grayBmp.sameAs(emptyBitmap)) {
@@ -415,6 +419,8 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
 
         Mat gray = new Mat();
         Imgproc.cvtColor(src,gray,Imgproc.COLOR_BGR2GRAY);
+        Toast.makeText(MainActivity.this, "CPU",
+                Toast.LENGTH_SHORT).show();
 
         Imgproc.medianBlur(gray, gray, 3);
         Mat circles = new Mat();
