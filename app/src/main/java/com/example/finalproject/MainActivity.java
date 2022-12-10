@@ -315,22 +315,28 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
     }
 
     public void detectCircleGPU() {
+        long beforeTime = System.currentTimeMillis();
         Mat src = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.bitmapToMat(bmp32, src);
+
         if (src.empty()) {
             Log.d(TAG,"detectCircle: the src matrix is empty.");
         }
         //GRAYSCALE (GPU)
         Mat gray = new Mat();
+//        saveBitmap(bmp32,"original_grayscale.bmp"); //makeGrayscale결과 확인용
+        long bt1 = System.currentTimeMillis();
         Bitmap grayBmp = makeGrayscale(bmp32);
+        long bt2 = System.currentTimeMillis() - bt1;
+        Log.d(TAG,"makeGrayscale변환 시간: "+bt2);
         Log.d(TAG,"Making grayscale done");
-        Toast.makeText(MainActivity.this, "GPU",
-                Toast.LENGTH_SHORT).show();
+        //아래 삭제할 것
+//        Toast.makeText(MainActivity.this, "GPU",
+//                Toast.LENGTH_SHORT).show();
 
         // 아래는 디버깅용
 //        capturedImageHolder.setImageBitmap(grayBmp); //makeGrayscale결과 확인용
-//        saveBitmap(bmp32,"original_grayscale.bmp"); //makeGrayscale결과 확인용
 //        saveBitmap(grayBmp,"converted_grayscale.bmp"); //makeGrayscale결과 확인용
         Bitmap emptyBitmap = Bitmap.createBitmap(grayBmp.getWidth(),
                 grayBmp.getHeight(), grayBmp.getConfig());
@@ -338,7 +344,10 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
             Log.d(TAG,"Bitmap is empty");
         }
         Utils.bitmapToMat(grayBmp,gray);
+        bt1 = System.currentTimeMillis();
         Imgproc.cvtColor(gray,gray,Imgproc.COLOR_BGR2GRAY);
+        bt2 = System.currentTimeMillis() - bt1;
+        Log.d(TAG,"cvtColor변환 시간: "+bt2);
         Log.d(TAG,"ImageType:"+gray.type());
         Mat circles = new Mat();
         Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0,
@@ -407,9 +416,14 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
 
 //        Log.d(TAG,"src.dims: %d, info.height: %d, info.width: %d",)
         Utils.matToBitmap(src, bitmap);
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime);
+        Toast.makeText(MainActivity.this, "GPU소요시간:"+secDiffTime+"ms",
+                Toast.LENGTH_SHORT).show();
 
     }
     public void detectCircleCPU() {
+        long beforeTime = System.currentTimeMillis();
         Mat src = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.bitmapToMat(bmp32, src);
@@ -418,10 +432,10 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         }
 
         Mat gray = new Mat();
+        long bt1 = System.currentTimeMillis();
         Imgproc.cvtColor(src,gray,Imgproc.COLOR_BGR2GRAY);
-        Toast.makeText(MainActivity.this, "CPU",
-                Toast.LENGTH_SHORT).show();
-
+        long bt2 = System.currentTimeMillis() - bt1;
+        Log.d(TAG,"CPU cvtColor변환 시간: "+bt2);
         Imgproc.medianBlur(gray, gray, 3);
         Mat circles = new Mat();
         Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0,
@@ -489,6 +503,11 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
 
 //        Log.d(TAG,"src.dims: %d, info.height: %d, info.width: %d",)
         Utils.matToBitmap(src, bitmap);
+
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime);
+        Toast.makeText(MainActivity.this, "CPU소요시간:"+secDiffTime+"ms",
+                Toast.LENGTH_SHORT).show();
 
     }
 
