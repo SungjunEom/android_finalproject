@@ -71,6 +71,15 @@ add_library( # Sets the name of the library.
         # Provides a relative path to your source file(s).
         GPIODriver.c)
 
+add_library( # Sets the name of the library.
+        SegmentDriver
+
+        # Sets the library as a shared library.
+        SHARED
+
+        # Provides a relative path to your source file(s).
+        SegmentDriver.c)
+
 
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -120,6 +129,13 @@ target_link_libraries( # Specifies the target library.
 
 target_link_libraries( # Specifies the target library.
         GPIODriver
+
+        # Links the target library to the log library
+        # included in the NDK.
+        ${log-lib})
+
+target_link_libraries( # Specifies the target library.
+        SegmentDriver
 
         # Links the target library to the log library
         # included in the NDK.

@@ -61,38 +61,38 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
     private native static int openLEDDriver(String path);
     private native static void closeLEDDriver();
     private native static void writeLEDDriver(byte[] data, int length);
-    private native static int openSegmentDriver(String path);
-    private native static void closeSegmentDriver();
-    private native static void writeSegmentDriver(byte[] data, int length);
+//    private native static int openSegmentDriver(String path);
+//    private native static void closeSegmentDriver();
+//    private native static void writeSegmentDriver(byte[] data, int length);
     private native static Bitmap makeGrayscale(Bitmap input);
     byte[] led = {0, 0, 0, 0, 0, 0, 0, 0};
 
+    SegmentDriver mSegment = new SegmentDriver();
     int data_int = 30;
     boolean mThreadRun, mStart;
     SegmentThread mSegThread;
-    int mCurCount, mMaxCount;
+    int mCurCount;
 
-    private class TimerThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
-            while(mThreadRun) {
-                byte[] n = {0, 0, 0, 0, 0, 0, 0};
-                try {
-                    if (mStart == false) {
-                        continue;
-                    }
-                    if (--mCurCount <= 0) {
-                        mStart = false;
-                        mCurCount = 0;
-                    }
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    private class TimerThread extends Thread {
+//        @Override
+//        public void run() {
+//            super.run();
+//            while(mThreadRun) {
+//                try {
+//                    if (mStart == false) {
+//                        continue;
+//                    }
+//                    if (--mCurCount <= 0) {
+//                        mStart = false;
+//                        mCurCount = 0;
+//                    }
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
     private class SegmentThread extends Thread {
         @Override
@@ -102,15 +102,20 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
                 byte[] n = {0, 0, 0, 0, 0, 0, 0};
 
                     if (mStart == false) {
-                        writeSegmentDriver(n,7);
+                        mSegment.write(n);
                     } else {
-                        n[0] = (byte) (mCurCount % 1000000/100000);
+                        n[0] = (byte) (mCurCount % 1000000 / 100000);
                         n[1] = (byte) (mCurCount % 100000 / 10000);
                         n[2] = (byte) (mCurCount % 10000 / 1000);
                         n[3] = (byte) (mCurCount % 1000 / 100);
                         n[4] = (byte) (mCurCount % 100 / 10);
                         n[5] = (byte) (mCurCount % 10);
-                        writeSegmentDriver(n,7);
+                        mSegment.write(n);
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
             }
         }
@@ -143,6 +148,8 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         gpioDriver = new GPIODriver();
         gpioDriver.setListener(this);
 
+
+
         if(gpioDriver.open("/dev/sm9s5422_interrupt") < 0) {
             Toast.makeText(MainActivity.this, "Driver Open Failed",
                     Toast.LENGTH_SHORT).show();
@@ -155,11 +162,12 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
             Toast.makeText(MainActivity.this, "Driver Open Failed",
                     Toast.LENGTH_SHORT).show();
         }
-        if(openSegmentDriver("/dev/sm9s5422_segment") < 0) {
+        if(mSegment.open("/dev/sm9s5422_segment") < 0) {
             Toast.makeText(MainActivity.this, "Driver Open Failed",
                     Toast.LENGTH_SHORT).show();
         }
         mThreadRun=true;
+        mStart = true;
         mSegThread = new SegmentThread();
         mSegThread.start();
         super.onResume();
@@ -216,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         releaseMediaRecorder();
         releaseCamera();
         closeLEDDriver();
-        closeSegmentDriver();
+        mSegment.close();
         mThreadRun=false;
         mSegThread=null;
     }
@@ -328,12 +336,6 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         Utils.bitmapToMat(grayBmp,gray);
         Imgproc.cvtColor(gray,gray,Imgproc.COLOR_BGR2GRAY);
         Log.d(TAG,"ImageType:"+gray.type());
-        //삭제할 것
-        //original GRAYSCALE (CPU)
-//        Mat gray = new Mat();
-//        Imgproc.cvtColor(src,gray,Imgproc.COLOR_BGR2GRAY);
-
-//        Imgproc.medianBlur(gray, gray, 3);
         Mat circles = new Mat();
         Imgproc.HoughCircles(gray, circles, Imgproc.HOUGH_GRADIENT, 1.0,
                 (double)gray.rows()/16, // change this value to detect circles
@@ -464,6 +466,7 @@ public class MainActivity extends AppCompatActivity implements GPIOListener{
         text_right.setText("" + right_circles);
 
         data_int = abs(left_circles-right_circles);
+        mCurCount = data_int;
         Log.d(TAG,"data_int: " + data_int);
 
         double percentage = ((double)right_circles/((double)left_circles + (double)right_circles)) * 8;
